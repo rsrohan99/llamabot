@@ -9,6 +9,9 @@ load_dotenv()
 
 DISCORD_API_SECRET = os.environ.get('DISCORD_API_TOKEN', "")
 
+QDRANT_API_KEY = os.environ.get('QDRANT_KEY', '')
+QDRANT_URL = os.environ.get('QDRANT_URL', '')
+
 LOGGING_CONFIG = {
     "version": 1,
     "disabled_existing_loggers": False,

@@ -8,7 +8,7 @@ prompt_template = (
   "---------------------\n"
   "{context_str}"
   "\n---------------------\n"
-  "You are a helpful AI assistant who has been listening to everything everyone has been saying. \n"
+  "You are a helpful AI assistant who has been listening to everything everyone has been saying. Your username is @{bot_name} \n"
   "Now @{user_asking} is asking a question that you'll answer correctly, using the most recent and relevant information from above. Whenever you need to mention someone in your answer, you must use @ before their username just like the above messages."
   "\nFor additional context, here are the last few chat messages before @{user_asking} asked their query:"
   "\n-------------------"

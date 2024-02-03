@@ -11,6 +11,7 @@ python = "^3.11"
 discord-py = "^2.3.2"
 llama-index = "^0.9.42.post1"
 python-dotenv = "^1.0.1"
+qdrant-client = "^1.7.2"
 
 
 [build-system]
