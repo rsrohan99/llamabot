@@ -15,12 +15,15 @@ from llama_index.vector_stores.types import (
     MetadataFilters,
     FilterOperator,
 )
+from llama_index import set_global_handler
 
 import qdrant_client
 
 import settings
 from models import Message
 from prompts import prompt
+
+set_global_handler("simple")
 
 logger = settings.logging.getLogger("bot")
 
@@ -62,14 +65,14 @@ index = VectorStoreIndex([],storage_context=storage_context)
 def persist_listening():
   global listening
 
-  print(listening)
+  # print(listening)
   with open(listening_path, 'wb') as file:
     pickle.dump(listening, file)
 
 def persist_messages():
   global messages
 
-  print(messages)
+  # print(messages)
   with open(messages_path, 'wb') as file:
     pickle.dump(messages, file)
 
@@ -124,7 +127,7 @@ def run():
       "Llama will forget everything it remembered. It will forget all messages, todo, reminders etc."
 
       forget_all(ctx)
-      await ctx.send('All messages forgotten.')
+      await ctx.send('All messages forgotten & stopped listening to yall')
 
   @bot.command(
     aliases=['l']
@@ -144,44 +147,55 @@ def run():
       if len(query) == 0:
         await ctx.send("What?")
         return
-      await ctx.send(answer_query(" ".join(query), ctx, bot))
+      user_messages = [msg for msg in messages.get(ctx.guild.id, []) if msg.author!=str(bot.user)]
+      print(user_messages)
+      if len(user_messages) == 0:
+        await ctx.send("Hey, Bot's knowledge base is empty now. Please say something before asking it questions.")
+        return
+        
+      async with ctx.typing():
+        await ctx.send(await answer_query(" ".join(query), ctx, bot))
 
   @bot.event
   async def on_message(message):
       global listening
-      if message.author == bot.user:
-          return
+      # if message.author == bot.user:
+      #     return
 
       if listening.get(message.guild.id, False):
-        if not message.content.startswith('/'):
-            # Call the remember_message function here
-            remember_message(message)
+        # if not message.content.startswith('/'):
+        remember_message(message, message.author==bot.user)
 
       await bot.process_commands(message)
 
-  def remember_message(message):
+  def remember_message(message, is_bot_message):
     when = message.created_at
     who=message.author
     msg_content = message.content
+
+    # print(message)
 
     logger.info(
     f"Remembering new message \"{msg_content}\" from {who} on channel "
     f"{message.channel.name} at {datetime.now().strftime('%m-%d-%Y %H:%M:%S')}"
     )
 
-    node = TextNode(
-      text=f"[{when.strftime('%m-%d-%Y %H:%M:%S')}] - @{who} on #{message.channel}: `{msg_content}`",
-      metadata={
-        'author': str(who),
-        'posted_at': str(when),
-        'channel_id': message.channel.id,
-        'guild_id': message.guild.id
-      },
-      excluded_llm_metadata_keys=['author', 'posted_at', 'channel_id', 'guild_id'],
-      excluded_embed_metadata_keys=['author', 'posted_at', 'channel_id', 'guild_id'],
-    )
+    msg_str = f"[{when.strftime('%m-%d-%Y %H:%M:%S')}] - @{who} on #[{str(message.channel)[:15]}]: `{msg_content}`"
 
-    index.insert_nodes([node])
+    if not is_bot_message:
+      node = TextNode(
+        text=msg_str,
+        metadata={
+          'author': str(who),
+          'posted_at': str(when),
+          'channel_id': message.channel.id,
+          'guild_id': message.guild.id
+        },
+        excluded_llm_metadata_keys=['author', 'posted_at', 'channel_id', 'guild_id'],
+        excluded_embed_metadata_keys=['author', 'posted_at', 'channel_id', 'guild_id'],
+      )
+
+      index.insert_nodes([node])
 
     if not messages.get(message.guild.id, None):
       messages[message.guild.id] = []
@@ -189,12 +203,12 @@ def run():
       is_in_thread=str(message.channel.type) == 'public_thread',
       posted_at=when,
       author=str(who),
-      message_str=f"[{when.strftime('%m-%d-%Y %H:%M:%S')}] - @{who} on #{message.channel}: `{msg_content}`",
+      message_str=msg_str,
       channel_id=message.channel.id
     ))
     persist_messages()
 
-  def answer_query(query, ctx, bot):
+  async def answer_query(query, ctx, bot):
     channel_id = ctx.channel.id
     thread_messages = [
       msg.message_str for msg in messages.get(ctx.guild.id, []) if msg.channel_id==channel_id
@@ -209,6 +223,9 @@ def run():
       filters=[
         MetadataFilter(
           key="guild_id", operator=FilterOperator.EQ, value=ctx.guild.id
+        ),
+        MetadataFilter(
+          key="author", operator=FilterOperator.NE, value=str(bot.user)
         ),
       ]
     )
@@ -240,18 +257,23 @@ def run():
 
     global qd_client
 
-    messages.pop(ctx.guild.id)
+    try:
+      messages.pop(ctx.guild.id)
+      listening.pop(ctx.guild.id)
+    except KeyError:
+      pass
     persist_messages()
+    persist_listening()
 
 
     qd_client.delete(
         collection_name=qd_collection,
         points_selector=rest.Filter(
-            must=[
-                rest.FieldCondition(
-                    key="guild_id", match=rest.MatchValue(value=ctx.guild_id)
-                )
-            ]
+          must=[
+            rest.FieldCondition(
+                key="guild_id", match=rest.MatchValue(value=ctx.guild.id)
+            )
+          ]
         ),
     )
 
