@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "discord-llamabot"
+version = "0.1.0"
+description = "A discord bot, created using LlamaIndex, which will act as a helpful assistant to your discord server"
+authors = ["Rohan <rsrohan99@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+discord-py = "^2.3.2"
+llama-index = "^0.9.42.post1"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
