@@ -9,7 +9,7 @@ from llama_index.llms import OpenAI
 from llama_index import VectorStoreIndex, StorageContext, ServiceContext
 from llama_index.postprocessor import FixedRecencyPostprocessor
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from llama_index.schema import TextNode, NodeRelationship, RelatedNodeInfo
+from llama_index.schema import TextNode
 from llama_index.vector_stores.types import (
     MetadataFilter,
     MetadataFilters,
@@ -204,17 +204,14 @@ def run():
       user_asking=str(ctx.author),
       bot_name=str(bot.user)
     )
-    # print(partially_formatted_prompt)
-    # for msg in messages:
-    #   print(msg)
-    #   print()
+
     filters = MetadataFilters(
       filters=[
         MetadataFilter(
           key="guild_id", operator=FilterOperator.EQ, value=ctx.guild.id
         ),
-    ]
-)
+      ]
+    )
     
     llm = OpenAI()
     service_context = ServiceContext.from_defaults(
