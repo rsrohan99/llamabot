@@ -16,9 +16,16 @@ Tech stack used for this bot:
 
 Checkout [my blog post](https://clusteredbytes.pages.dev/posts/2024/create-a-discord-chatbot-using-llamaindex-for-your-server/) where I walk you through the entire process of building a full-fledged discord bot like this using LlamaIndex.
 
+### Features
+
+- `/llama` - Ask LlamaBot questions
+- `/listen` - Starts listening to messages across the server and remembers those.
+- `/stop` - Stops listening to messages
+- `/forget` - Forgets all messages from the server
+- `/status` - Shows whether bot is listening to messages or not
+
 
 ### Installation
-
 
 ```bash
 $ poetry install
