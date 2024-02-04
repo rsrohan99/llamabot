@@ -1,6 +1,7 @@
 import os
 import logging
 from logging.config import dictConfig
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -12,6 +13,10 @@ DISCORD_API_SECRET = os.environ.get('DISCORD_API_TOKEN', "")
 
 QDRANT_API_KEY = os.environ.get('QDRANT_KEY', '')
 QDRANT_URL = os.environ.get('QDRANT_URL', '')
+
+logs_file_path = "logs/infos.log"
+logs_file = Path(logs_file_path)
+logs_file.parent.mkdir(parents=True, exist_ok=True)
 
 LOGGING_CONFIG = {
     "version": 1,
