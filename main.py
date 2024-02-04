@@ -167,8 +167,8 @@ def run():
       if len(query) == 0:
         await ctx.send("What?")
         return
-      user_messages = [msg for msg in messages.get(ctx.guild.id, []) if msg.author!=str(bot.user)]
-      print(user_messages)
+      user_messages = [msg for msg in messages.get(ctx.guild.id, []) if msg.author!=str(bot.user) and not msg.just_msg.startswith("/")]
+      # print(user_messages)
       if len(user_messages) == 0:
         await ctx.send("Hey, Bot's knowledge base is empty now. Please say something before asking it questions.")
         return
