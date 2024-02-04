@@ -5,6 +5,8 @@ An open-source Discord bot, created using LlamaIndex, that -
 - Continuously learns from them
 - Answers your questions from the entire server.
 
+https://github.com/rsrohan99/llamabot/assets/62835870/eaab6db1-8f79-4e3a-aaf0-c132b966d9f6
+
 It’s recommended to host this bot yourself for your server, but if you wanna try out first, you can invite the bot to your server through [this link](https://discord.com/api/oauth2/authorize?client_id=1203216926730616862&permissions=3072&scope=bot).
 
 Tech stack used for this bot:
