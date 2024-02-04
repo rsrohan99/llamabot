@@ -5,11 +5,12 @@ import pickle
 import discord
 from discord.ext import commands
 
-from llama_index.llms import OpenAI
+from llama_index.llms import Gemini
+from llama_index.embeddings import GeminiEmbedding
 from llama_index import VectorStoreIndex, StorageContext, ServiceContext
 from llama_index.postprocessor import FixedRecencyPostprocessor
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from llama_index.schema import TextNode
+from llama_index.schema import TextNode, QueryBundle
 from llama_index.vector_stores.types import (
     MetadataFilter,
     MetadataFilters,
@@ -56,11 +57,19 @@ qd_client = qdrant_client.QdrantClient(
 
 qd_collection = 'discord_llamabot'
 
+llm=Gemini()
+embed_model = GeminiEmbedding()
+
 vector_store = QdrantVectorStore(client=qd_client,
                                  collection_name=qd_collection)
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
+service_context = ServiceContext.from_defaults(
+  embed_model=embed_model,
+  llm=llm)
 
-index = VectorStoreIndex([],storage_context=storage_context)
+index = VectorStoreIndex([],
+               storage_context=storage_context,
+               service_context=service_context)
 
 def persist_listening():
   global listening
@@ -130,6 +139,17 @@ def run():
       await ctx.send('All messages forgotten & stopped listening to yall')
 
   @bot.command(
+    aliases=['st']
+  )
+  async def status(ctx):
+    "Status of LlamaBot, whether it's listening or not"
+
+    await ctx.send(
+      "Listening to yall👂" if listening.get(ctx.guild.id, False) \
+      else "Not Listening 🙉"
+    )
+
+  @bot.command(
     aliases=['l']
   )
   async def llama(ctx, *query):
@@ -163,12 +183,16 @@ def run():
       #     return
 
       if listening.get(message.guild.id, False):
-        # if not message.content.startswith('/'):
-        remember_message(message, message.author==bot.user)
+        if message.content.startswith('/'):
+          if message.content.startswith('/l') or message.content.startswith('/llama'):
+            remember_message(message, True)
+        else:
+          remember_message(message, message.author==bot.user)
+
 
       await bot.process_commands(message)
 
-  def remember_message(message, is_bot_message):
+  def remember_message(message, save_only_message):
     when = message.created_at
     who=message.author
     msg_content = message.content
@@ -182,7 +206,7 @@ def run():
 
     msg_str = f"[{when.strftime('%m-%d-%Y %H:%M:%S')}] - @{who} on #[{str(message.channel)[:15]}]: `{msg_content}`"
 
-    if not is_bot_message:
+    if not save_only_message:
       node = TextNode(
         text=msg_str,
         metadata={
@@ -204,7 +228,8 @@ def run():
       posted_at=when,
       author=str(who),
       message_str=msg_str,
-      channel_id=message.channel.id
+      channel_id=message.channel.id,
+      just_msg=message.content
     ))
     persist_messages()
 
@@ -212,7 +237,7 @@ def run():
     channel_id = ctx.channel.id
     thread_messages = [
       msg.message_str for msg in messages.get(ctx.guild.id, []) if msg.channel_id==channel_id
-    ][:5]
+    ][-1*settings.LAST_N_MESSAGES:-1]
     partially_formatted_prompt = prompt.partial_format(
       replies="\n".join(thread_messages),
       user_asking=str(ctx.author),
@@ -230,17 +255,13 @@ def run():
       ]
     )
     
-    llm = OpenAI()
-    service_context = ServiceContext.from_defaults(
-      llm=llm
-    )
     postprocessor = FixedRecencyPostprocessor(
         top_k=20, 
         date_key="posted_at", # the key in the metadata to find the date
         service_context=service_context
     )
     query_engine = index.as_query_engine(
-      verbose=True,
+      service_context=service_context,
       filters=filters,
       similarity_top_k=20,
       node_postprocessors=[postprocessor])
@@ -248,8 +269,16 @@ def run():
         {"response_synthesizer:text_qa_template": partially_formatted_prompt}
     )
 
-    # return f"Got query \"{query}\". Answering in a bit..."
-    return query_engine.query(query)
+    replies_query = [
+      msg.just_msg for msg in messages.get(ctx.guild.id, []) if msg.channel_id==channel_id
+    ][-1*settings.LAST_N_MESSAGES:-1]
+    replies_query.append(query)
+
+    print(replies_query)
+    return query_engine.query(QueryBundle(
+      query_str=query,
+      custom_embedding_strs=replies_query
+    ))
 
 
   def forget_all(ctx):

@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+LAST_N_MESSAGES = 5
 
 DISCORD_API_SECRET = os.environ.get('DISCORD_API_TOKEN', "")
 

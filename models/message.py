@@ -7,3 +7,4 @@ class Message(BaseModel):
   posted_at: datetime
   author: str
   channel_id: int
+  just_msg: str
