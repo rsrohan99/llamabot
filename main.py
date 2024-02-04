@@ -28,7 +28,7 @@ set_global_handler("simple")
 
 logger = settings.logging.getLogger("bot")
 
-persist_dir = "./persist"
+persist_dir = "./.persist"
 
 messages_path = Path(persist_dir + "/messages.pkl")
 listening_path = Path(persist_dir + "/listening.pkl")
