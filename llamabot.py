@@ -161,23 +161,23 @@ def run():
       global listening
     
       if not listening.get(ctx.guild.id, False):
-        await ctx.send(
+        await ctx.message.reply(
           "I'm not listening to what y'all saying 🙈🙉🙊. "
           "\nRun \"/listen\" if you want me to start listening."
         )
         return
 
       if len(query) == 0:
-        await ctx.send("What?")
+        await ctx.message.reply("What?")
         return
       user_messages = [msg for msg in messages.get(ctx.guild.id, []) if msg.author!=str(bot.user) and not msg.just_msg.startswith("/")]
       # print(user_messages)
       if len(user_messages) == 0:
-        await ctx.send("Hey, Bot's knowledge base is empty now. Please say something before asking it questions.")
+        await ctx.message.reply("Hey, Bot's knowledge base is empty now. Please say something before asking it questions.")
         return
         
       async with ctx.typing():
-        await ctx.send(await answer_query(" ".join(query), ctx, bot))
+        await ctx.message.reply(await answer_query(" ".join(query), ctx, bot))
 
   @bot.event
   async def on_message(message):
