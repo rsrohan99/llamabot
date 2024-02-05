@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "discord-llamabot"
+name = "llamabot"
 version = "0.1.0"
 description = "A discord bot, created using LlamaIndex, which will act as a helpful assistant to your discord server"
 authors = ["Rohan <rsrohan99@gmail.com>"]

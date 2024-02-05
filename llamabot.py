@@ -35,19 +35,36 @@ listening_path = Path(persist_dir + "/listening.pkl")
 
 messages_path.parent.mkdir(parents=True, exist_ok=True)
 
+
+def persist_listening():
+  global listening
+
+  # print(listening)
+  with open(listening_path, 'wb') as file:
+    pickle.dump(listening, file)
+
+
+def persist_messages():
+  global messages
+
+  # print(messages)
+  with open(messages_path, 'wb') as file:
+    pickle.dump(messages, file)
+
+
 if messages_path.is_file():
   with open(messages_path, 'rb') as file:
     messages = pickle.load(file)
 else:
-  messages_path.touch(exist_ok=True)
   messages: dict[int, list[Message]] = {} 
+  persist_messages()
 
 if listening_path.is_file():
   with open(listening_path, 'rb') as file:
     listening = pickle.load(file)
 else:
-  listening_path.touch(exist_ok=True)
   listening: dict[int, bool] = {}
+  persist_listening()
 
 # initialize qdrant client
 qd_client = qdrant_client.QdrantClient(
@@ -70,20 +87,6 @@ service_context = ServiceContext.from_defaults(
 index = VectorStoreIndex([],
                storage_context=storage_context,
                service_context=service_context)
-
-def persist_listening():
-  global listening
-
-  # print(listening)
-  with open(listening_path, 'wb') as file:
-    pickle.dump(listening, file)
-
-def persist_messages():
-  global messages
-
-  # print(messages)
-  with open(messages_path, 'wb') as file:
-    pickle.dump(messages, file)
 
 persist_messages()
 persist_listening()
