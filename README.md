@@ -30,7 +30,11 @@ Checkout [my blog post](https://clusteredbytes.pages.dev/posts/2024/create-a-dis
 ### Installation
 
 ```bash
+$ git clone https://github.com/rsrohan99/llamabot.git
+
+$ cd llamabot
+
 $ poetry install
 
-$ poetry run python main.py
+$ poetry run python llamabot.py
 ```
