@@ -12,7 +12,7 @@ prompt_template = (
   "\n-------------------"
   "\n{replies}"
   "\n-------------------"
-  "\nNow @{user_asking} is asking a question that you'll answer correctly, using the most recent and relevant information from the chat messages above."
+  "\nNow @{user_asking} is asking a question that you'll answer correctly, using the most recent and relevant information from the chat messages above. If you can't correctly answer the query from the above chat messages, then briefy say that you don't find that info from previous conversations."
   "\nThe question asked by \"@{user_asking}\": `{query_str}`"
   "\nYour helpful response: "
 )
