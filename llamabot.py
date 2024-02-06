@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import pickle
 import os
+import traceback
 
 import discord
 from discord.ext import commands
@@ -52,6 +53,16 @@ def persist_messages():
     pickle.dump(messages, file)
 
 
+def process_incoming_message(message):
+  """Replace user id with handle for mentions."""
+  content = message.content
+  for user in message.mentions:
+    mention_str = f'<@{user.id}>'
+    content = content.replace(mention_str, f'@{user.name}')
+  message.content = content
+  return message
+
+
 if messages_path.is_file():
   with open(messages_path, 'rb') as file:
     messages = pickle.load(file)
@@ -82,7 +93,7 @@ print(use_openai)
 # if os.environ.get("GOOGLE_API_KEY", None):
 if use_openai:
   from llama_index.llms import OpenAI
-  from llama_index.embeddings import OpenAIEmbedding
+  # from llama_index.embeddings import OpenAIEmbedding
   print("Using GPT-4")
   llm=OpenAI(
     model="gpt-4-0125-preview",
@@ -196,6 +207,8 @@ def run():
         try:
           await ctx.message.reply(await answer_query(" ".join(query), ctx, bot))
         except:
+          tb = traceback.format_exc()
+          print(tb)
           await ctx.message.reply("The bot encountered an error, will try to fix it soon. Feel free to send a dm to @rsrohan99 about it or open an issue on GitHub https://github.com/rsrohan99/llamabot, any kind of feedback is really appreciated, thanks.")
 
   @bot.event
@@ -203,6 +216,7 @@ def run():
       global listening
       # if message.author == bot.user:
       #     return
+      message = process_incoming_message(message)
 
       if listening.get(message.guild.id, False):
         if message.content.startswith('/'):
@@ -278,14 +292,14 @@ def run():
     )
     
     postprocessor = FixedRecencyPostprocessor(
-        top_k=10, 
+        top_k=8, 
         date_key="posted_at", # the key in the metadata to find the date
         service_context=service_context
     )
     query_engine = index.as_query_engine(
       service_context=service_context,
       filters=filters,
-      similarity_top_k=10,
+      similarity_top_k=8,
       node_postprocessors=[postprocessor])
     query_engine.update_prompts(
         {"response_synthesizer:text_qa_template": partially_formatted_prompt}
