@@ -47,7 +47,9 @@ GOOGLE_API_KEY='...'
 # USE_OPENAI=true  # set this to use gpt4, add OPENAI_API_KEY as well, set USE_OPENAI to '' to use Gemini Pro
 # OPENAI_API_KEY='...'
 ```
-If you wanna use GPT-4 with Ada embeddings, then set `USE_OPENAI` to `true` and add `OPENAI_API_KEY`
+If you wanna use GPT-4 to generate responses, then set `USE_OPENAI` to 1 and add `OPENAI_API_KEY`
+
+If you wanna use Cohere to generate responses, then set `USE_COHERE` to 1 and add `COHERE_KEY`
 
 Next run the program:
 
