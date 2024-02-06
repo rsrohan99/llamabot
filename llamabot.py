@@ -88,7 +88,8 @@ qd_collection = 'discord_llamabot'
 embed_model = GeminiEmbedding()
 
 use_openai = bool(os.environ.get("USE_OPENAI", False))
-print(use_openai)
+use_cohere = bool(os.environ.get("USE_COHERE", False))
+# print(use_openai)
 
 # if os.environ.get("GOOGLE_API_KEY", None):
 if use_openai:
@@ -99,6 +100,11 @@ if use_openai:
     model="gpt-4-0125-preview",
   )
   # embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+elif use_cohere:
+  from llama_index.llms import Cohere
+  print("Using Cohere")
+  llm=Cohere(api_key=os.environ.get('COHERE_KEY'))
+
 else:
   from llama_index.llms import Gemini
   print("Using Gemini Pro")
@@ -203,13 +209,13 @@ def run():
         await ctx.message.reply("Hey, Bot's knowledge base is empty now. Please say something before asking it questions.")
         return
         
-      async with ctx.typing():
-        try:
+      try:
+        async with ctx.typing():
           await ctx.message.reply(await answer_query(" ".join(query), ctx, bot))
-        except:
-          tb = traceback.format_exc()
-          print(tb)
-          await ctx.message.reply("The bot encountered an error, will try to fix it soon. Feel free to send a dm to @rsrohan99 about it or open an issue on GitHub https://github.com/rsrohan99/llamabot, any kind of feedback is really appreciated, thanks.")
+      except:
+        tb = traceback.format_exc()
+        print(tb)
+        await ctx.message.reply("The bot encountered an error, will try to fix it soon. Feel free to send a dm to @rsrohan99 about it or open an issue on GitHub https://github.com/rsrohan99/llamabot, any kind of feedback is really appreciated, thanks.")
 
   @bot.event
   async def on_message(message):
