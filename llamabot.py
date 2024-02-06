@@ -1,14 +1,14 @@
 from datetime import datetime
 from pathlib import Path
 import pickle
+import os
 
 import discord
 from discord.ext import commands
 
-from llama_index.llms import Gemini
-from llama_index.embeddings import GeminiEmbedding
 from llama_index import VectorStoreIndex, StorageContext, ServiceContext
 from llama_index.postprocessor import FixedRecencyPostprocessor
+from llama_index.embeddings import GeminiEmbedding
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.schema import TextNode, QueryBundle
 from llama_index.vector_stores.types import (
@@ -74,8 +74,24 @@ qd_client = qdrant_client.QdrantClient(
 
 qd_collection = 'discord_llamabot'
 
-llm=Gemini()
 embed_model = GeminiEmbedding()
+
+use_openai = bool(os.environ.get("USE_OPENAI", False))
+print(use_openai)
+
+# if os.environ.get("GOOGLE_API_KEY", None):
+if use_openai:
+  from llama_index.llms import OpenAI
+  from llama_index.embeddings import OpenAIEmbedding
+  print("Using GPT-4")
+  llm=OpenAI(
+    model="gpt-4-0125-preview",
+  )
+  # embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+else:
+  from llama_index.llms import Gemini
+  print("Using Gemini Pro")
+  llm=Gemini()
 
 vector_store = QdrantVectorStore(client=qd_client,
                                  collection_name=qd_collection)
@@ -177,7 +193,10 @@ def run():
         return
         
       async with ctx.typing():
-        await ctx.message.reply(await answer_query(" ".join(query), ctx, bot))
+        try:
+          await ctx.message.reply(await answer_query(" ".join(query), ctx, bot))
+        except:
+          await ctx.message.reply("The bot encountered an error, will try to fix it soon. Feel free to send a dm to @rsrohan99 about it or open an issue on GitHub https://github.com/rsrohan99/llamabot, any kind of feedback is really appreciated, thanks.")
 
   @bot.event
   async def on_message(message):
@@ -259,14 +278,14 @@ def run():
     )
     
     postprocessor = FixedRecencyPostprocessor(
-        top_k=20, 
+        top_k=10, 
         date_key="posted_at", # the key in the metadata to find the date
         service_context=service_context
     )
     query_engine = index.as_query_engine(
       service_context=service_context,
       filters=filters,
-      similarity_top_k=20,
+      similarity_top_k=10,
       node_postprocessors=[postprocessor])
     query_engine.update_prompts(
         {"response_synthesizer:text_qa_template": partially_formatted_prompt}
@@ -277,7 +296,7 @@ def run():
     ][-1*settings.LAST_N_MESSAGES:-1]
     replies_query.append(query)
 
-    print(replies_query)
+    # print(replies_query)
     return query_engine.query(QueryBundle(
       query_str=query,
       custom_embedding_strs=replies_query

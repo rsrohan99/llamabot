@@ -33,7 +33,25 @@ Checkout [my blog post](https://clusteredbytes.pages.dev/posts/2024/create-a-dis
 $ git clone https://github.com/rsrohan99/llamabot.git
 
 $ cd llamabot
+```
 
+Now set the following Environment variables:
+```bash
+DISCORD_API_TOKEN='...'
+
+QDRANT_KEY='...'
+QDRANT_URL='...'
+
+GOOGLE_API_KEY='...'
+
+# USE_OPENAI=true  # set this to use gpt4, add OPENAI_API_KEY as well, set USE_OPENAI to '' to use Gemini Pro
+# OPENAI_API_KEY='...'
+```
+If you wanna use GPT-4 with Ada embeddings, then set `USE_OPENAI` to `true` and add `OPENAI_API_KEY`
+
+Next run the program:
+
+```bash
 $ poetry install
 
 $ poetry run python llamabot.py
